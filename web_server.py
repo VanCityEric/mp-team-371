@@ -16,9 +16,23 @@ serverSocket.listen(5)
 print("The server ready to receive")
 while True:
     connectionSocket, addr = serverSocket.accept()
-    # data = connectionSocket.recv(1024).decode()
+    data = connectionSocket.recv(1024).decode('utf-8')
+    method = data.split(' ')[0]
+    route = data.split(' ')[1]
+    print(data)
+    print(data.split("\r\n\r\n"))
+
+    if method == 'GET':
+        if route == ("/test.html"):
+            f = open("test.html", "r")
+            http = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n"+"\n"+f.read()
+        else:
+            http = "HTTP/1.1 404 Not Found\n\n404 Not Found"
+    
+    
+
     # do stuff
-    http = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n"+"\n"+"<html><body>Hello Wsorld</body></html>\n"
+   
     connectionSocket.send(http.encode())
     connectionSocket.shutdown(SHUT_WR)
     connectionSocket.close()
