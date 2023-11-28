@@ -19,15 +19,22 @@ while True:
     data = connectionSocket.recv(1024).decode('utf-8')
     method = data.split(' ')[0]
     route = data.split(' ')[1]
-    print(data)
-    print(data.split("\r\n\r\n"))
+    header = data.split("\r\n\r\n")[0].split("\r\n")[1:]
+    print(data + "\n")
+    print(header)
+    # headerDict = {}
+    # for heading in header:
+    #     heading.split()
+    
+    f = open("test.html", "r")
+    http = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n"+"\n"+f.read()
 
-    if method == 'GET':
-        if route == ("/test.html"):
-            f = open("test.html", "r")
-            http = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n"+"\n"+f.read()
-        else:
-            http = "HTTP/1.1 404 Not Found\n\n404 Not Found"
+    # if method == 'GET':
+    #     if route == ("/test.html"):
+    #         f = open("test.html", "r")
+    #         http = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n"+"\n"+f.read()
+    #     else:
+    #         http = "HTTP/1.1 404 Not Found\n\n404 Not Found"
     
     
 
