@@ -21,19 +21,20 @@ while True:
     data = connectionSocket.recv(1024).decode('utf-8')
     method = data.split(' ')[0]
     route = data.split(' ')[1]
-    ver = data.split(' ')[2]
-    print(method)
-    print(route)
+    httpVersion = data.split(' ')[2]
     headerRaw = data.split("\r\n\r\n")[0].split("\r\n")[1:]
-    print(data + "\n")
     header = {}
     for heading in headerRaw:
         key = heading.split(":")[0]
         value = heading.split(":")[1]
         header[key] = value
+    
+    print(data + "\n")
+    print(method)
+    print(route)
     print("ROUTE IS " + route)
     # check for malformed request, respond with status code 400
-    if not route.startswith("/") or not ver.startswith("HTTP/") or method not in supportedMethods:
+    if not route.startswith("/") or not httpVersion.startswith("HTTP/") or method not in supportedMethods:
         http = statusLine400 + "\n"
     elif route == "/":
         if method == "POST" and "Content-Length" not in header: # if post requests w/o content-length header
@@ -47,12 +48,10 @@ while True:
             else: 
                 f = open("test.html", "r")
                 http = "HTTP/1.1 200 OK\r\n" + "Content-Type: text/html\n"+"\n"+f.read()
-    elif route == "/secure": # secure route, forbidden to enter to regular clients
-        http = statusLine403 + "\n" + "this endpoint is only for authorized users"
+    elif route == "/secure": # secure route, exists but is forbidden 
+        http = statusLine403 + "\n" + "this route is forbidden for regular users"
     else:
         http = "HTTP/1.1 404 Not Found\r\n"
-
-    # do stuff
 
     connectionSocket.send(http.encode())
     connectionSocket.shutdown(SHUT_WR)
