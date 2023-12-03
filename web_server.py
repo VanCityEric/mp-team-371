@@ -1,5 +1,17 @@
 from socket import *
 
+def processHttpReqHeader(data):
+    method = data.split(' ')[0]
+    route = data.split(' ')[1]
+    httpVersion = data.split(' ')[2]
+    headerRaw = data.split("\r\n\r\n")[0].split("\r\n")[1:]
+    headers = {}
+    for heading in headerRaw:
+        key = heading.split(":")[0]
+        value = heading.split(":")[1]
+        headers[key] = value
+    return method, route, httpVersion, headers
+
 httpVersion = "HTTP/1.1"
 statusLine200 = httpVersion + " 200 OK\r\n"
 statusLine304 = httpVersion + " 304 Not Modified\r\n"
@@ -10,7 +22,6 @@ statusLine411 = httpVersion + " 411 Length required\r\n"
 
 supportedMethods = ["GET", "POST"]
 
-
 serverPort = 9000
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('localhost', serverPort))
@@ -19,39 +30,33 @@ print("The server ready to receive")
 while True:
     connectionSocket, addr = serverSocket.accept()
     data = connectionSocket.recv(1024).decode('utf-8')
-    method = data.split(' ')[0]
-    route = data.split(' ')[1]
-    httpVersion = data.split(' ')[2]
-    headerRaw = data.split("\r\n\r\n")[0].split("\r\n")[1:]
-    header = {}
-    for heading in headerRaw:
-        key = heading.split(":")[0]
-        value = heading.split(":")[1]
-        header[key] = value
+    method, route, httpVersion, headers = processHttpReqHeader(data)
     
     print(data + "\n")
     print(method)
     print(route)
+    print(httpVersion)
+    print(headers)
     print("ROUTE IS " + route)
     # check for malformed request, respond with status code 400
     if not route.startswith("/") or not httpVersion.startswith("HTTP/") or method not in supportedMethods:
-        http = statusLine400 + "\n"
+        http = statusLine400 + "\r\n"
     elif route == "/":
-        if method == "POST" and "Content-Length" not in header: # if post requests w/o content-length header
-            http = statusLine411 +"\n"
+        if method == "POST" and "Content-Length" not in headers: # if post requests w/o content-length header
+            http = statusLine411 +"\r\n"
         else:
-            http = statusLine200 + "\n"
+            http = statusLine200 + "\r\n"
     elif route == "/test.html":
         if method == "GET":
-            if "If-Modified-Since" in header:
-                http = "HTTP/1.1 304 Not Modified\r\n\n"
+            if "If-Modified-Since" in headers:
+                http = "HTTP/1.1 304 Not Modified\r\n\r\n"
             else: 
                 f = open("test.html", "r")
-                http = "HTTP/1.1 200 OK\r\n" + "Content-Type: text/html\n"+"\n"+f.read()
+                http = "HTTP/1.1 200 OK\r\n" + "Content-Type: text/html\r\n"+"\r\n"+f.read()
     elif route == "/secure": # secure route, exists but is forbidden 
-        http = statusLine403 + "\n" + "this route is forbidden for regular users"
+        http = statusLine403 + "\r\n" + "this route is forbidden for regular users"
     else:
-        http = "HTTP/1.1 404 Not Found\r\n"
+        http = "HTTP/1.1 404 Not Found\r\n\r\n"
 
     connectionSocket.send(http.encode())
     connectionSocket.shutdown(SHUT_WR)
