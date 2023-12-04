@@ -1,9 +1,8 @@
 from socket import *
 
 # return index of file in cache array, -1 otherwise
-def isInCache(route, cache):
+def indexInCache(route, cache):
     for (i, obj) in enumerate(cache):
-        print(obj)
         if obj["route"] == route:
             return i
     return -1
@@ -42,9 +41,12 @@ while True:
     originServerSocket = socket(AF_INET, SOCK_STREAM) # socket to connect to origin server
     
     if method == "GET": # we only care if the client is sending a GET request, otherwise forward request to origin server
-        cacheIndex = isInCache(route, cache)
+        cacheIndex = indexInCache(route, cache)
         if cacheIndex != -1: # cache hit
-            print("yo mama")
+            body = cache[cacheIndex]['data']
+            http = statusLine200 + "Content-Type: text/html\r\n" + "\r\n" + body +"\r\n"
+            print("cache packet is sending from proxy")
+            connectionSocket.send(http.encode("utf-8"))
         else: # cache miss
             originServerSocket.connect((originServerName, originServerPort))
             originServerSocket.send(data.encode('utf-8'))
