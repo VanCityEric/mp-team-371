@@ -1,4 +1,5 @@
 from socket import *
+from datetime import datetime
 
 # return index of file in cache array, -1 otherwise
 def indexInCache(route, cache):
@@ -34,9 +35,13 @@ serverSocket.bind(('localhost', serverPort))
 serverSocket.listen(5)
 print("The proxy server ready to receive")
 
+num_of_reqs = 0
+
 while True:
     connectionSocket, addr = serverSocket.accept()
     data = connectionSocket.recv(1024).decode('utf-8')
+    num_of_reqs += 1
+    print("request number {} received from client at time {}".format(num_of_reqs, datetime.now().strftime("%H:%M:%S")))
     method, route, httpVersion, headers = processHttpReqHeader(data)
     originServerSocket = socket(AF_INET, SOCK_STREAM) # socket to connect to origin server
     
@@ -45,7 +50,7 @@ while True:
         if cacheIndex != -1: # cache hit
             body = cache[cacheIndex]['data']
             http = statusLine200 + "Content-Type: text/html\r\n" + "\r\n" + body +"\r\n"
-            print("cache packet is sending from proxy")
+            print("sending cached file...")
             connectionSocket.send(http.encode("utf-8"))
         else: # cache miss
             originServerSocket.connect((originServerName, originServerPort))

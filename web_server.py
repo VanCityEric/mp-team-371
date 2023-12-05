@@ -1,4 +1,5 @@
 from socket import *
+from datetime import datetime
 
 def processHttpReqHeader(data):
     method = data.split(' ')[0]
@@ -21,6 +22,7 @@ statusLine404 = httpVersion + " 404 Not Found\r\n"
 statusLine411 = httpVersion + " 411 Length required\r\n"
 
 supportedMethods = ["GET", "POST"]
+num_of_reqs = 0
 
 serverPort = 9000
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -30,14 +32,10 @@ print("The server ready to receive")
 while True:
     connectionSocket, addr = serverSocket.accept()
     data = connectionSocket.recv(1024).decode('utf-8')
+    num_of_reqs += 1
+    print("request number {} received from client at time {}".format(num_of_reqs, datetime.now().strftime("%H:%M:%S")))
     method, route, httpVersion, headers = processHttpReqHeader(data)
-    
-    print(data + "\n")
-    print(method)
-    print(route)
-    print(httpVersion)
-    print(headers)
-    print("ROUTE IS " + route)
+
     # check for malformed request, respond with status code 400
     if not route.startswith("/") or not httpVersion.startswith("HTTP/") or method not in supportedMethods:
         http = statusLine400 + "\r\n"
