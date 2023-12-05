@@ -20,6 +20,11 @@ def processHttpReqHeader(data):
         headers[key] = value
     return method, route, httpVersion, headers
 
+def processHttpResHeader(data):
+    httpVersion = data.split(' ')[0]
+    statusCode = data.split(' ')[1]
+    return statusCode, httpVersion
+
 def processHttpBody(data):
     return data.split("\r\n\r\n")[1]
 
@@ -56,7 +61,9 @@ while True:
             originServerSocket.connect((originServerName, originServerPort))
             originServerSocket.send(data.encode('utf-8'))
             forwardedData = originServerSocket.recv(1024).decode("utf-8")
-            cache.append({'route': route, 'data': processHttpBody(forwardedData)}) 
+            statusCode, _ = processHttpResHeader(forwardedData)
+            if(statusCode == "200"): # only cache if receieve 200 response from origin server
+                cache.append({'route': route, 'data': processHttpBody(forwardedData)}) 
             connectionSocket.send(forwardedData.encode("utf-8"))
             originServerSocket.close()
     else: 
